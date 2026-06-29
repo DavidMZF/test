@@ -29,6 +29,9 @@ use strict;
 use warnings;
 
 use constant TAG => 'overlay_smc';
+use constant TAG_LABELS => 'overlay_smc_labels';
+sub tag        { return TAG; }
+sub tag_labels { return TAG_LABELS; }
 
 use constant {
     C_UP    => '#26a69a',   # BOS alcista / FVG alcista (verde)
@@ -108,7 +111,7 @@ sub _render_fvgs {
         $fresh = 0 if $fresh < 0;
 
         my $base    = ( $f->{dir} eq 'bull' ) ? C_UP : C_DOWN;
-        my $fill_op = 0.08 + 0.12 * $fresh;          # 0.08 .. 0.20
+        my $fill_op = 0.18 + 0.17 * $fresh;          # 0.08 .. 0.20
         $fill_op *= 0.55 if $f->{state} eq 'mitigated';
         my $fill = _mix( $base, $fill_op );
         my $line = _mix( $base, 0.30 + 0.30 * $fresh );
@@ -126,7 +129,7 @@ sub _render_fvgs {
             $x1, $yt, $x2, $yb,
             -fill    => $fill,
             -outline => $line,
-            -width   => 1,
+            -width   => 0,
             -tags    => [TAG],
         );
 
@@ -212,7 +215,7 @@ sub _chip {
 
     my $tid = $canvas->createText(
         $cx, $ty, -text => $text, -anchor => 'center', -font => $font,
-        -fill => ( $style eq 'solid' ? '#ffffff' : $color ), -tags => [TAG] );
+        -fill => ( $style eq 'solid' ? '#ffffff' : $color ), -tags => [TAG, TAG_LABELS] );
     my @bb = $canvas->bbox($tid);
     return unless @bb;
     my ( $x1, $y1, $x2, $y2 ) = @bb;
@@ -230,10 +233,16 @@ sub _chip {
         push @$placed, [ $x1, $y1, $x2, $y2 ];
     }
 
-    my $fill = $style eq 'solid' ? $color : '#151a24';
+    my $fill = $style eq 'solid' ? $color : $color; # Usa el color real o el mezclado con _mix
+
     my $rid  = $canvas->createRectangle(
         $x1, $y1, $x2, $y2,
-        -fill => $fill, -outline => $color, -width => 1, -tags => [TAG] );
+        -fill    => $fill, 
+        -outline => $color, 
+        -width   => 1, 
+        -stipple => 'gray25', # <--- ESTO simula una opacidad del 25% punteada nativa de Tk
+        -tags    => [TAG, TAG_LABELS] 
+    );
     $canvas->lower( $rid, $tid );
     return [ $x1, $y1, $x2, $y2 ];
 }
@@ -259,7 +268,7 @@ sub _mix {
                           hex( substr( $hex, 3, 2 ) ),
                           hex( substr( $hex, 5, 2 ) ) );
     my $f = 1 - $op;
-    my ( $br, $bg, $bb ) = ( 15, 19, 26 );
+    my ( $br, $bg, $bb ) = ( 13, 17, 23 );
     $r = int( $r + ( $br - $r ) * $f );
     $g = int( $g + ( $bg - $g ) * $f );
     $b = int( $b + ( $bb - $b ) * $f );

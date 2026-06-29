@@ -4,8 +4,8 @@ use strict;
 use warnings;
 
 use constant {
-    COLOR_ATR      => '#215cff',
-    COLOR_ATR_LAST => '#0017c6',
+    COLOR_ATR      => '#2189ff',
+    COLOR_ATR_LAST => '#0004ff',
     COLOR_CROSS    => '#8b95a7',
     BG_COLOR       => '#0f131a',
 };

@@ -342,14 +342,21 @@ sub render {
     # construido arriba -- nunca crean una escala propia. $self->{overlays}
     # es opcional para no romper compatibilidad si algun consumidor de
     # ChartEngine no lo provee.
-    $self->{overlays}->render_all( $self->{canvas_price}, $scale_price )
-        if $self->{overlays};
-
+    if ( $self->{overlays} ) {
+        $self->{overlays}->render_all( $self->{canvas_price}, $scale_price );
+        $self->{canvas_price}->raise('candle');   # velas siempre encima de overlays
+    }
     $self->{price_panel}->render_last_visible_price( $self->{canvas_price} );
 
     my $anchors = $self->compute_intraday_labels( $islice_start, $islice_end );
     $self->{price_panel}->draw_time_axis( $self->{canvas_price}, $anchors );
     $self->{price_panel}->_init_crosshair_objects;
+
+    if ( $self->{overlays} ) {
+        $self->{canvas_price}->raise('candle');          # velas sobre FVG/lineas
+        $self->{canvas_price}->raise('overlay_labels');  # chips sobre velas
+    }
+
 
     $self->{canvas_atr}->delete('atr_all');
     $self->{canvas_atr}->delete('scale_bg');

@@ -93,8 +93,10 @@ sub render_all {
             $overlay->render($canvas, $scale);
         } else {
             $canvas->delete($overlay->tag);
+            # Borra tambien el tag de labels si el overlay lo tiene
+            $canvas->delete($overlay->tag_labels) if $overlay->can('tag_labels');
         }
-    }
+    }   
 }
 
 1;

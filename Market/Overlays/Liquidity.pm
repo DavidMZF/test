@@ -30,6 +30,10 @@ use strict;
 use warnings;
 
 use constant TAG => 'overlay_liquidity';
+use constant TAG_LABELS => 'overlay_liquidity_labels';
+
+sub tag        { return TAG; }
+sub tag_labels { return TAG_LABELS; }
 
 use constant {
     C_BSL    => '#ef5350',   # rojo    (Buy Side Liquidity)
@@ -255,7 +259,7 @@ sub _chip {
 
     my $tid = $canvas->createText(
         $cx, $ty, -text => $text, -anchor => 'center', -font => $font,
-        -fill => ( $style eq 'solid' ? '#ffffff' : $color ), -tags => [TAG] );
+        -fill => ( $style eq 'solid' ? '#ffffff' : $color ), -tags => [TAG, TAG_LABELS] );
     my @bb = $canvas->bbox($tid);
     return unless @bb;
     my ( $x1, $y1, $x2, $y2 ) = @bb;
@@ -276,7 +280,7 @@ sub _chip {
     my $fill = $style eq 'solid' ? $color : '#151a24';
     my $rid  = $canvas->createRectangle(
         $x1, $y1, $x2, $y2,
-        -fill => $fill, -outline => $color, -width => 1, -tags => [TAG] );
+        -fill => $fill, -outline => $color, -width => 1, -stipple => 'gray50', -tags => [TAG, TAG_LABELS] );
     $canvas->lower( $rid, $tid );
     return [ $x1, $y1, $x2, $y2 ];
 }

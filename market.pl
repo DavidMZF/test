@@ -258,7 +258,7 @@ my $toolbar_left = $tf_frame->Frame(-background => '#151a24')
 # --- Boton modo precio ---
 my $mode_btn;
 $mode_btn = $toolbar_left->Button(%bs,
-    -text       => 'P:Auto',
+    -text       => 'Panel:Auto',
     -foreground => '#26a69a',
     -font       => 'TkDefaultFont 9 bold',
     -command    => sub {
@@ -290,7 +290,7 @@ $engine->set_mode_callbacks(
     sub {   # callback precio
         my ($is_free) = @_;
         $mode_btn->configure(
-            -text       => $is_free ? 'P:Manual' : 'P:Auto',
+            -text       => $is_free ? 'Panel:Manual' : 'Panel:Auto',
             -foreground => $is_free ? '#ef5350'  : '#26a69a',
         );
     },
@@ -308,7 +308,7 @@ $engine->set_mode_callbacks(
 # =============================================================================
 my $active_tf = '1m';
 my $tf_lbl = $toolbar_left->Label(%bs,
-    -text       => '1m',
+    -text       => '',
     -foreground => '#4f8cff',
     -font       => 'TkDefaultFont 9 bold',
 )->pack(-side => 'left', -padx => 4, -pady => 2);
@@ -331,7 +331,7 @@ for my $tf (qw(1m 5m 15m 1h 2h 4h D W)) {
 
             # Resetear botones de modo a Auto
             $mode_btn->configure(
-                -text       => 'P:Auto',
+                -text       => 'Panel:Auto',
                 -foreground => '#26a69a',
             );
             $mode_btn_atr->configure(
