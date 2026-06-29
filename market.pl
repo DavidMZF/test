@@ -509,53 +509,29 @@ my %BBS = (
 # --- Fila "Herramientas:" con el toggle del panel ---
 my $tools_bar = $mw->Frame(-background => $BAR_BG);
 $tools_bar->pack(-side => 'top', -fill => 'x', -before => $canvas_price);
-$tools_bar->Label(-text => 'Herramientas:', -background => $BAR_BG,
-    -foreground => '#d6dbe6', -font => 'TkDefaultFont 9 bold')
-    ->pack(-side => 'left', -padx => 8, -pady => 3);
-
-# --- Panel colapsable con las columnas de checkbuttons ---
-# Nace COLAPSADO: la app arranca limpia, sin overlays activos ni panel abierto.
-my $tools_panel = $mw->Frame(-background => $PANEL_BG);
-
-my $panel_shown = 0;
-my $panel_btn;
-$panel_btn = $tools_bar->Button(%BBS,
-    -text => 'Overlays [>]', -foreground => '#4f8cff',
-    -font => 'TkDefaultFont 9 bold',
-    -command => sub {
-        $panel_shown = !$panel_shown;
-        if ($panel_shown) {
-            $tools_panel->pack(-side=>'top', -fill=>'x', -before=>$canvas_price);
-            $panel_btn->configure(-text => 'Overlays [v]');
-        } else {
-            $tools_panel->packForget;
-            $panel_btn->configure(-text => 'Overlays [>]');
-        }
-    },
-)->pack(-side => 'left', -padx => 4, -pady => 2);
 
 
 # --- Helpers de construccion del menu ---
 my $make_col = sub {
     my ($title, $color) = @_;
-    my $col = $tools_panel->Frame(-background => $PANEL_BG);
-    $col->pack(-side => 'left', -anchor => 'n', -padx => 14, -pady => 6);
-    $col->Label(-text => $title, -background => $PANEL_BG, -foreground => $color,
-        -font => 'TkDefaultFont 9 bold')->pack(-side => 'top', -anchor => 'w');
+    my $col = $tools_bar->Frame(-background => $BAR_BG);
+    $col->pack(-side => 'left', -anchor => 'w', -padx => 6, -pady => 2);
+    $col->Label(-text => $title, -background => $BAR_BG, -foreground => $color,
+        -font => 'TkDefaultFont 9 bold')->pack(-side => 'left', -padx => 4);
     return $col;
 };
 my $make_chk = sub {
     my ($parent, $text, $varref, $cmd, $disabled) = @_;
     my $cb = $parent->Checkbutton(
         -text => $text, -variable => $varref, -onvalue => 1, -offvalue => 0,
-        -background => $PANEL_BG, -activebackground => $PANEL_BG,
+        -background => $BAR_BG, -activebackground => $BAR_BG,
         -foreground => '#d6dbe6', -activeforeground => '#ffffff',
-        -selectcolor => '#0f131a',
+        -selectcolor => '#4f8cff',
         -font => 'TkDefaultFont 8', -anchor => 'w',
         ( $cmd ? ( -command => $cmd ) : () ),
     );
     $cb->configure(-state => 'disabled') if $disabled;
-    $cb->pack(-side => 'top', -anchor => 'w', -fill => 'x');
+    $cb->pack(-side => 'left', -anchor => 'w', -padx => 2);
     return $cb;
 };
 
@@ -584,6 +560,9 @@ $make_chk->($col_smc, 'Activar SMC', \$smc_master, sub {
 $make_chk->($col_smc, 'BOS',       \$SMC{show_bos},   $leaf_smc);
 $make_chk->($col_smc, 'CHoCH',     \$SMC{show_choch}, $leaf_smc);
 $make_chk->($col_smc, 'FVG',       \$SMC{show_fvg},   $leaf_smc);
+
+$tools_bar->Frame(-background => '#2a3445', -width => 1, -height => 16)
+    ->pack(-side => 'left', -pady => 4, -padx => 4);
 
 # =============================================================================
 # Columna LIQUIDITY (Swing / BSL / SSL / EQH / EQL / Sweeps / Grabs / Runs)

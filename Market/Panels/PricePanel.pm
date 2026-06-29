@@ -12,7 +12,7 @@ use constant {
     COLOR_CROSS    => '#8b95a7',
     COLOR_FG       => '#d6dbe6',
     COLOR_GRID     => '#222b3a',
-    COLOR_LAST_BG  => '#69ea07',
+    COLOR_LAST_BG  => '#ea0707',
     COLOR_INFO     => '#d6dbe6',
     BG_COLOR       => '#0f131a',
     MIN_BODY_H     => 1,
