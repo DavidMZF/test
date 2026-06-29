@@ -92,7 +92,7 @@ print "Cargando datos...\n";
 my $market = Market::MarketData->new;
 
 my $csv_path;
-for my $cand ("$Bin/data/2026_03.csv", "$Bin/2026_03.csv", "$Bin/../data/2026_03.csv") {
+for my $cand ("$Bin/data/2026_06_29.csv", "$Bin/2026_06_29.csv", "$Bin/../data/2026_06_29.csv") {
     if (-f $cand) { $csv_path = $cand; last; }
 }
 die "No se encuentra 2026_03.csv\n" unless $csv_path;
