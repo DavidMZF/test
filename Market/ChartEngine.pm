@@ -65,6 +65,10 @@ sub new {
         _cb_mode_price => undef,
         _cb_mode_atr   => undef,
 
+        # Modo seleccion de inicio de Replay (clic en vela)
+        _replay_select_mode => 0,
+        _cb_replay_click    => undef,
+
         # Drag en regleta Y
         _scale_drag_panel   => undef,
         _scale_drag_start_y => undef,
@@ -99,6 +103,18 @@ sub set_mode_callbacks {
 # _notify_mode_price / _notify_mode_atr  (privados)
 # Disparan el callback si está registrado.
 # -----------------------------------------------------------------------------
+sub set_replay_select_mode {
+    my ( $self, $active ) = @_;
+    $self->{_replay_select_mode} = $active ? 1 : 0;
+    my $cursor = $active ? 'crosshair' : '';
+    $self->{canvas_price}->configure(-cursor => $cursor);
+}
+
+sub set_replay_click_cb {
+    my ( $self, $cb ) = @_;
+    $self->{_cb_replay_click} = $cb;
+}
+
 sub _notify_mode_price {
     my ( $self, $is_free ) = @_;
     $self->{_cb_mode_price}->($is_free) if $self->{_cb_mode_price};
@@ -741,6 +757,20 @@ sub bind_events {
         return if $self->{_free_mode_atr}   && $panel eq 'atr';
         return if abs($dx) > DRAG_THRESHOLD || abs($dy) > DRAG_THRESHOLD;
 
+        # Modo seleccion de replay: clic simple en el plot -> notificar ts de la vela
+        if ( $self->{_replay_select_mode} && $panel eq 'price'
+             && $self->{_scale_price} && $self->{_cb_replay_click} )
+        {
+            my $idx = $self->{_scale_price}->x_to_index($lx);
+            my $candle = $self->{market}->get_candle($idx);
+            if ( $candle ) {
+                $self->{_replay_select_mode} = 0;
+                $self->{canvas_price}->configure(-cursor => '');
+                $self->{_cb_replay_click}->( $candle->{ts} );
+            }
+            return;
+        }
+
     });
 
     # =========================================================================
@@ -786,6 +816,11 @@ sub bind_events {
         $self->{_atr_cross}   = undef;
         $self->{canvas_price}->delete('price_cross');
         $self->{canvas_atr}->delete('atr_cross');
+        # Cancelar modo seleccion de replay si estaba activo
+        if ( $self->{_replay_select_mode} ) {
+            $self->{_replay_select_mode} = 0;
+            $self->{canvas_price}->configure(-cursor => '');
+        }
     });
 
     # =========================================================================

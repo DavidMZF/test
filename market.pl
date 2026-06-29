@@ -31,7 +31,7 @@ use Market::Overlays::Liquidity;
 # VENTANA
 # =============================================================================
 my $mw = MainWindow->new;
-$mw->title('Chart Test');
+$mw->title('Market Panel');
 $mw->resizable(1, 1);
 $mw->configure(-background => '#0f131a');
 
@@ -344,11 +344,7 @@ for my $tf (qw(1m 5m 15m 1h 2h 4h D W)) {
 }
 $tf_btns{'1m'}->configure(-foreground => '#4f8cff');
 
-$tf_frame->Label(%bs,
-    -text       => 'Rueda: zoom  |  Ctrl+Rueda: ancla mouse  |  Shift+Rueda: zoom V  |  Drag regleta: zoom V  |  Dbl-regleta: auto  |  Drag sep: resize ATR',
-    -foreground => '#8b95a7',
-    -font       => 'TkDefaultFont 7',
-)->pack(-side => 'right', -padx => 10);
+
 
 # =============================================================================
 # CONTROLES DE REPLAY (Etapa 3, Fase 2)
@@ -356,39 +352,35 @@ $tf_frame->Label(%bs,
 $toolbar_left->Frame(-background => '#2a3445', -width => 1, -height => 16)
     ->pack(-side => 'left', -pady => 5, -padx => 6);
 
-$toolbar_left->Label(%bs, -text => 'Replay desde:')
-    ->pack(-side => 'left', -padx => 6);
+my $replay_selected_ts;  # ts de la vela elegida, undef si no hay seleccion
 
-# Prefill con el timestamp de la vela intermedia del CSV cargado (1m),
-# en el mismo formato ISO que ya usa el propio CSV -- editable por el
-# usuario, parseado con el mismo Time::Moment->from_string que usa la
-# carga del archivo.
-my $default_replay_str = $market->raw_get_candle( int($market->raw_size / 2) )->{time};
-my $replay_date_var = $default_replay_str;
-my $replay_entry = $toolbar_left->Entry(
-    -textvariable => \$replay_date_var,
-    -width        => 26,
-    -font         => 'TkFixedFont 9',
-    -background   => '#0f131a',
-    -foreground   => '#d6dbe6',
-    -insertbackground => '#d6dbe6',
-    -relief       => 'flat',
-)->pack(-side => 'left', -padx => 2, -pady => 2);
+my $replay_date_lbl = $toolbar_left->Label(%bs,
+    -text       => '—',
+    -foreground => '#ffd700',
+    -font       => 'TkFixedFont 9',
+)->pack(-side => 'left', -padx => 4);
 
-my $btn_replay_start = $toolbar_left->Button(%bs,
-    -text    => 'Inicio Replay',
+my $btn_replay_start;
+$btn_replay_start = $toolbar_left->Button(%bs,
+    -text    => 'Replay',
     -command => sub {
-        my $tm;
-        eval { $tm = Time::Moment->from_string($replay_date_var) };
-        if ($@ || !$tm) {
-            $replay_status_lbl->configure(
-                -text => "Fecha invalida: '$replay_date_var' (formato esperado: 2026-04-15T12:00:00-05:00)"
-            );
-            return;
-        }
-        $replay->start($tm->epoch);
+        $engine->set_replay_select_mode(1);
+        $btn_replay_start->configure(-foreground => '#ffd700');
+        $replay_date_lbl->configure(-text => 'clic en vela...');
     },
 )->pack(-side => 'left', -padx => 4, -pady => 2);
+
+$engine->set_replay_click_cb(sub {
+    my ($ts) = @_;
+    $replay_selected_ts = $ts;
+    $btn_replay_start->configure(-foreground => '#d6dbe6');
+    my $fecha = Time::Moment->from_epoch($ts)
+        ->with_offset_same_instant(-300)
+        ->strftime('%Y-%m-%d %H:%M');
+    $replay_date_lbl->configure(-text => $fecha);
+    # Habilitar Play para que el usuario confirme
+    $btn_replay_play->configure(-state => 'normal');
+});
 
 $toolbar_left->Frame(-background => '#2a3445', -width => 1, -height => 16)
     ->pack(-side => 'left', -pady => 5, -padx => 6);
@@ -402,7 +394,12 @@ $btn_replay_step_back = $toolbar_left->Button(%bs,
 $btn_replay_play = $toolbar_left->Button(%bs,
     -text    => 'Play',
     -state   => 'disabled',
-    -command => sub { $replay->play; },
+    -command => sub {
+        if ( defined $replay_selected_ts && !$replay->is_active ) {
+            $replay->start($replay_selected_ts);
+        }
+        $replay->play if $replay->is_active;
+    },
 )->pack(-side => 'left', -padx => 1, -pady => 2);
 
 $btn_replay_pause = $toolbar_left->Button(%bs,
@@ -430,14 +427,19 @@ $btn_replay_exit = $toolbar_left->Button(%bs,
     -text       => 'Exit Replay',
     -foreground => '#ef5350',
     -state      => 'disabled',
-    -command    => sub { $replay->exit_replay; },
+    -command    => sub {
+        $replay->exit_replay;
+        $replay_selected_ts = undef;
+        $replay_date_lbl->configure(-text => '—');
+    },
 )->pack(-side => 'left', -padx => 4, -pady => 2);
 
 $replay_status_lbl = $toolbar_left->Label(%bs,
     -text       => 'EN VIVO (replay inactivo)',
     -foreground => '#d6dbe6',
     -font       => 'TkDefaultFont 9 bold',
-)->pack(-side => 'left', -padx => 10);
+);
+# No se hace pack: el label existe pero no se muestra
 
 # =============================================================================
 # DRAG DEL SEPARADOR ATR
@@ -531,9 +533,7 @@ $panel_btn = $tools_bar->Button(%BBS,
         }
     },
 )->pack(-side => 'left', -padx => 4, -pady => 2);
-$tools_bar->Label(-text => 'Clic en cada herramienta para activar/desactivar de forma independiente',
-    -background => $BAR_BG, -foreground => '#8b95a7', -font => 'TkDefaultFont 8')
-    ->pack(-side => 'right', -padx => 10);
+
 
 # --- Helpers de construccion del menu ---
 my $make_col = sub {
